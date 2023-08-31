@@ -9,7 +9,7 @@ from langchain.chains import RetrievalQA
 openai.api_type = "azure"
 openai.api_base = "https://meus-aai-dev-voxelgenerate-001.openai.azure.com/"
 openai.api_version = "2023-03-15-preview"
-openai.api_key = "c98998dcfeea4f24b2b86b367bdbcdce"
+openai.api_key = "<your api key goes here>"
 
 def generate_response(uploaded_file, query_text):
     # Load document if file is uploaded
