@@ -5,6 +5,10 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 
 openai.api_type = "azure"
 openai.api_base = "https://meus-aai-dev-voxelgenerate-001.openai.azure.com/"
