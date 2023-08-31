@@ -1,11 +1,17 @@
 import streamlit as st
+import openai
 from langchain.llms import OpenAI
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 
-def generate_response(uploaded_file, openai_api_key, query_text):
+openai.api_type = "azure"
+openai.api_base = "https://meus-aai-dev-voxelgenerate-001.openai.azure.com/"
+openai.api_version = "2023-03-15-preview"
+openai.api_key = "<your api key goes here>"
+
+def generate_response(uploaded_file, query_text):
     # Load document if file is uploaded
     if uploaded_file is not None:
         documents = [uploaded_file.read().decode()]
@@ -13,14 +19,22 @@ def generate_response(uploaded_file, openai_api_key, query_text):
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         texts = text_splitter.create_documents(documents)
         # Select embeddings
-        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+        embeddings = OpenAIEmbeddings(
+                engine = "voxelgenerate-gpt-35-turbo",
+                openai_api_base = openai.api_base,
+                openai_api_type = openai.api_type, 
+                openai_api_key = openai.api_key
+        )
         # Create a vectorstore from documents
         db = Chroma.from_documents(texts, embeddings)
         # Create retriever interface
         retriever = db.as_retriever()
         # Create QA chain
-        qa = RetrievalQA.from_chain_type(llm=OpenAI(openai_api_key=openai_api_key), chain_type='stuff', retriever=retriever)
+        qa = RetrievalQA.from_chain_type(llm=OpenAI(openai_api_key = openai.api_key, 
+                                                    engine="voxelgenerate-gpt-35-turbo"),
+                                                    chain_type='stuff', retriever=retriever)
         return qa.run(query_text)
+
 
 # Page title
 st.set_page_config(page_title='🦜🔗 Ask the Doc App')
@@ -34,13 +48,11 @@ query_text = st.text_input('Enter your question:', placeholder = 'Please provide
 # Form input and query
 result = []
 with st.form('myform', clear_on_submit=True):
-    openai_api_key = st.text_input('OpenAI API Key', type='password', disabled=not (uploaded_file and query_text))
     submitted = st.form_submit_button('Submit', disabled=not(uploaded_file and query_text))
-    if submitted and openai_api_key.startswith('sk-'):
+    if submitted:
         with st.spinner('Calculating...'):
-            response = generate_response(uploaded_file, openai_api_key, query_text)
+            response = generate_response(uploaded_file, query_text)
             result.append(response)
-            del openai_api_key
 
 if len(result):
     st.info(response)
